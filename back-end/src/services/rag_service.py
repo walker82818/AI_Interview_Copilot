@@ -28,6 +28,8 @@ class RAGService:
         resume_summary: str = "",
         jd_summary: str = "",
         filter_expr: str | None = None,
+        conversation_history: list[dict[str, str]] | None = None,
+        interview_stage: str = "",
     ) -> str:
         context_chunks = await self.retrieve_context(question, filter_expr=filter_expr)
         messages = build_rag_prompt(
@@ -35,8 +37,10 @@ class RAGService:
             context_chunks=context_chunks,
             resume_summary=resume_summary,
             jd_summary=jd_summary,
+            conversation_history=conversation_history,
+            interview_stage=interview_stage,
         )
-        logger.info("RAG generate with {} context chunks", len(context_chunks))
+        logger.info("RAG generate with {} context chunks, stage={}", len(context_chunks), interview_stage)
         return await llm_service.chat(messages)
 
     async def generate_stream(
@@ -45,6 +49,8 @@ class RAGService:
         resume_summary: str = "",
         jd_summary: str = "",
         filter_expr: str | None = None,
+        conversation_history: list[dict[str, str]] | None = None,
+        interview_stage: str = "",
     ):
         context_chunks = await self.retrieve_context(question, filter_expr=filter_expr)
         messages = build_rag_prompt(
@@ -52,7 +58,10 @@ class RAGService:
             context_chunks=context_chunks,
             resume_summary=resume_summary,
             jd_summary=jd_summary,
+            conversation_history=conversation_history,
+            interview_stage=interview_stage,
         )
+        logger.info("RAG stream with {} context chunks, stage={}", len(context_chunks), interview_stage)
         async for token in llm_service.chat_stream(messages):
             yield token
 

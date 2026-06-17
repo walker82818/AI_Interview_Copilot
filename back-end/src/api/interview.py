@@ -61,12 +61,24 @@ async def send_message_stream(
     current_user: CurrentUser,
 ) -> StreamingResponse:
     async def event_generator() -> AsyncIterator[str]:
-        async for token in interview_service.send_message_stream(
-            db, current_user.id, session_id, data.content
-        ):
-            yield token
+        try:
+            async for token in interview_service.send_message_stream(
+                db, current_user.id, session_id, data.content
+            ):
+                yield f"data: {token}\n\n"
+            yield "data: [DONE]\n\n"
+        except HTTPException:
+            yield "data: [ERROR]\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/plain; charset=utf-8")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/{session_id}/end", response_model=InterviewSessionResponse)

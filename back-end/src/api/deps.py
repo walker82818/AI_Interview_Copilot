@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import decode_access_token
+from src.core.token_blacklist import token_blacklist
 from src.db.postgres import get_db
 from src.models.user import User
 
@@ -22,6 +23,12 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="未提供认证令牌",
+        )
+    # 检查 token 是否已被登出（黑名单）
+    if token_blacklist.is_blacklisted(credentials.credentials):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="令牌已失效，请重新登录",
         )
     user_id = decode_access_token(credentials.credentials)
     if not user_id:

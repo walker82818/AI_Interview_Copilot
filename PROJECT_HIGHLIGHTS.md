@@ -177,7 +177,62 @@ docker-compose up -d
 | **AI 深度** | RAG + Rerank + LLM 三位一体，非简单 API 封装 |
 | **流程完整** | 简历→JD→面试→评分 全链路，非单点功能 |
 | **交互体验** | SSE 流式响应 + 逐字渲染 + 雷达图可视化 |
-| **安全可靠** | JWT + bcrypt + 限流 + CORS + SQL 注入防护 |
-| **架构前瞻** | V1/V2 分层演进，Agent 架构预留 |
+| **安全可靠** | JWT + bcrypt + Token 黑名单 + 限流 + CORS + SQL 注入防护 |
+| **架构前瞻** | V1/V2/V3/V4/V5 分层演进，Agent + ReAct + Memory 全架构 |
 | **工程规范** | 异步全栈 + 类型安全 + Docker 化 + 完整测试 |
-| **可扩展** | 模块化设计，LLM/Embedding/Rerank 均可替换 |
+| **可扩展** | 模块化设计，LLM/Embedding/Rerank/MCP 工具均可替换 |
+
+---
+
+## 📐 亮点十：V4 ReAct 推理模式 — Think → Act → Observe
+
+面试 Agent 采用 **ReAct (Reasoning + Acting)** 模式，而非简单的一问一答：
+
+```
+候选人回答 → Thought: 分析回答质量、识别关键信息缺口
+           → Action: retrieve(相关知识) / ask(追问) / clarify(澄清)
+           → Observation: 检索结果分析、回答质量判断
+           → 循环直到生成最佳追问
+```
+
+**ReAct 轨迹可追溯**：每个面试决策都有完整的推理链记录，可用于面试质量分析和 Agent 调优。
+
+---
+
+## 🧩 亮点十一：V4 Memory 系统 — 短期+长期双记忆
+
+- **短期记忆** (ShortTermMemory)：滑动窗口 + 重要性加权，确保 Agent 关注当前面试上下文
+- **长期记忆** (LongTermMemory)：跨会话候选人画像，追踪技能成长轨迹、薄弱领域识别
+- **对话记忆** (ConversationMemory)：自动摘要压缩 + 关键信息提取，应对长对话场景
+
+```
+面试中 → ShortTermMemory(20条滑动窗口)
+       → ConversationMemory(摘要 + 关键点)
+面试后 → LongTermMemory(技能画像 + 进步曲线)
+下次面试 → 自动加载候选人画像，针对性追问弱项
+```
+
+---
+
+## 🔌 亮点十二：V5 MCP 工具协议 — GitHub/LeetCode 外部数据集成
+
+实现 **Model Context Protocol (MCP)** 工具注册中心，支持：
+
+| 工具 | 功能 |
+|------|------|
+| **GitHub 分析** | 用户公开资料、仓库统计、语言偏好、贡献度 |
+| **LeetCode 分析** | 刷题统计、难度分布、竞赛排名、最近提交 |
+
+MCP 注册中心支持动态注册/发现/执行，Agent 可按需调用外部工具丰富面试评估维度。前端提供独立的「外部分析」页面，可视化展示 GitHub/LeetCode 数据。
+
+---
+
+## 🚀 版本演进总览
+
+| 版本 | 周期 | 交付内容 |
+|------|------|---------|
+| **V1** | 2周 | 登录、上传简历、上传JD、RAG问答 ✅ |
+| **V2** | 1周 | 模拟面试（阶段管理+个性化开场/结束语）、评分报告（5维+Rubric校准） ✅ |
+| **V3** | 1周 | Agent层（Resume/JD/Interview/Evaluation 四大智能体）、动态追问策略 ✅ |
+| **V4** | 1周 | ReAct推理模式、Memory系统（短期/长期/对话记忆） ✅ |
+| **V5** | 后续 | MCP工具协议、GitHub分析、LeetCode分析 ✅ |

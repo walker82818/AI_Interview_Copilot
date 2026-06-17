@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/jd", label: "JD" },
   { href: "/interview", label: "面试" },
   { href: "/report", label: "报告" },
+  { href: "/external", label: "分析" },
 ];
 
 export default function Navbar() {

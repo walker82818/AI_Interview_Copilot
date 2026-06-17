@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from src.api import auth, interview, jd, report, resume
+from src.api import auth, external, interview, jd, report, resume
 from src.core.config import settings
 from src.core.logger import logger
 from src.db.milvus import connect_milvus
@@ -49,6 +49,7 @@ app.include_router(
     interview.router, prefix=f"{api_prefix}/interviews", tags=["interview"]
 )
 app.include_router(report.router, prefix=f"{api_prefix}/reports", tags=["report"])
+app.include_router(external.router, prefix=f"{api_prefix}/external", tags=["external"])
 
 
 @app.get("/health")

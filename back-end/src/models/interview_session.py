@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base
@@ -23,6 +23,9 @@ class InterviewSession(Base):
     )
     ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
+    )
+    report_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True, default=None
     )
 
     user: Mapped["User"] = relationship(back_populates="interview_sessions")

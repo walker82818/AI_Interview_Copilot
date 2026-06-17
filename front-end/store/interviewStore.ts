@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { InterviewSession, Message } from "@/types";
 import * as interviewService from "@/services/interview";
+import { API_BASE_URL, TOKEN_KEY } from "@/utils/constants";
 
 interface InterviewState {
   session: InterviewSession | null;
@@ -61,27 +62,77 @@ export const useInterviewStore = create<InterviewState>((set, get) => ({
       createdAt: new Date().toISOString(),
     };
 
+    // 创建一个占位的 AI 回复消息
+    const assistantId = crypto.randomUUID();
+    const assistantPlaceholder: Message = {
+      id: assistantId,
+      role: "assistant",
+      content: "",
+      createdAt: new Date().toISOString(),
+    };
+
     set((state) => ({
       session: state.session
         ? {
             ...state.session,
-            messages: [...state.session.messages, userMessage],
+            messages: [...state.session.messages, userMessage, assistantPlaceholder],
           }
         : null,
       isTyping: true,
     }));
 
     try {
-      const reply = await interviewService.sendMessage(session.id, content);
-      set((state) => ({
-        session: state.session
-          ? {
-              ...state.session,
-              messages: [...state.session.messages, reply],
-            }
-          : null,
-        isTyping: false,
-      }));
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
+      const response = await fetch(
+        `${API_BASE_URL}/interviews/${session.id}/messages/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ content }),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("流式请求失败");
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("无法读取响应流");
+
+      const decoder = new TextDecoder();
+      let fullContent = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6);
+          if (payload === "[DONE]" || payload === "[ERROR]") continue;
+
+          fullContent += payload;
+          set((state) => ({
+            session: state.session
+              ? {
+                  ...state.session,
+                  messages: state.session.messages.map((m) =>
+                    m.id === assistantId ? { ...m, content: fullContent } : m,
+                  ),
+                }
+              : null,
+          }));
+        }
+      }
+
+      set({ isTyping: false });
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : "发送消息失败",
